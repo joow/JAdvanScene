@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="jas" basedir="." default="compile">
+	
+	<!-- Lecture des propriétés -->
+	<property file="build.properties"/>        
+ 
+    <!-- target qui supprime les classes compilées et le JAR -->
+    <target name="clean">
+    	<delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}/*"/>
+    </target>
+ 
+    <!-- target qui compile le code Java dans le répertoire build -->
+	<target name="compile"> 
+		<!-- création d'un répertoire pour la compilation -->
+		<mkdir dir="${build.dir}"/>
+ 
+		<!-- compilation des sources Java -->
+		<javac srcdir="${src.dir}" destdir="${build.dir}">
+			<classpath>
+				<pathelement path="${lib.dir}/${xml-lib.jar}"/>
+			</classpath>
+			<!--<compilerarg value="-Xlint:unchecked"/>-->
+		</javac>
+	</target> 
+ 
+    <!-- target qui crée le JAR -->
+	<target name="create-jar" depends="clean,compile">
+		<!-- création d'un répertoire pour le JAR -->
+		<mkdir dir="${dist.dir}"/>
+ 
+         <!-- création du JAR -->
+         <jar destfile="${dist.dir}/${ant.project.name}.jar" basedir="${build.dir}">
+         	<manifest>
+         		<!-- on indique la classe principale du JAR-->
+				<attribute name="Main-Class" value="${main-class}"/>
+         		<attribute name="Class-Path" value="${xml-lib.jar}"/>
+			</manifest>
+		</jar>
+		
+		<!-- Copie des libraires externes -->
+		<copy file="${lib.dir}/${xml-lib.jar}" todir="${dist.dir}" />
+		
+		<!-- Copie du fichier ReadMe.txt -->
+		<copy file="${readme.file}" todir="${dist.dir}" />
+		
+		<!-- Copie de la license -->
+		<copy file="${licence.file}" todir="${dist.dir}" />
+		
+		<!-- Compression de la distribution en tar.gz -->
+		<tar destfile="${dist.dir}/${ant.project.name}-${version}.tar.gz" compression="gzip">
+			<tarfileset dir="${dist.dir}">
+				<include name="*.jar"/>
+				<include name="*.txt"/>				
+			</tarfileset>
+		</tar>		
+	</target>
+	
+	<target name="javadoc">
+		<mkdir dir="${doc.dir}"/>
+		<javadoc sourcepath="${src.dir}" destdir="${doc.dir}" packagenames="*"/>
+	</target>
+ 
+    <!-- exécution du JAR -->
+    <target name="run">
+    	<java jar="${dist.dir}/${ant.project.name}.jar" fork="true"/>		
+	</target>
+ 
+    <target name="build-and-run" depends="create-jar,run" />               
+</project>
